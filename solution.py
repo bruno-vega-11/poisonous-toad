@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import open3d as o3d
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans,DBSCAN
 from sklearn.metrics import silhouette_score
 
 
@@ -45,7 +45,7 @@ print("centros de |nz| (ordenados):", np.sort(centros).round(3))
 k_z = int(np.argmax(centros))
 ## Igual se chequea que ese clusters sea realmente horizontal
 ## Por ejemplo solo se agarra se toma los puntos que pertenece al cluster k_z y además
-## Supera el umbral de k_z >= 0.8 . Si lo es se marca como true, si no solamente como false
+## Supera el umbral de centros[k_z]>= 0.8 . Si lo es se marca como true, si no solamente como false
 horizontal = (kmeans.labels_ == k_z) if centros[k_z] >= 0.8 else np.zeros(N, bool)
 ## En horizontal se tiene los puntos en superficiones horizontales
 
@@ -103,3 +103,30 @@ for nombre, k in [("piso",k_piso),("techo",k_techo)]:
     if nombre == "piso":
         floor_z = z_med  # altura del piso
     next_id += 1 
+
+
+## Paso 3: dbscan para otros clusters
+print("Paso 3, se va ha usar dbscan para identificar ruido sobre xyz")
+
+## Se seleccionan los puntos que aun no tienen cluster
+resto = np.where(~usado)[0]
+
+## d_nn contiene para cada punto la distancia a su vecino mas cercano
+## osea la separacion entre puntos de la nube 
+d_nn = np.asarray(pcd.compute_nearest_neighbor_distance())
+
+## con eso se elige un epsilon, que sera 3 veces la separacion tipica
+## 3 veces por que con 3 nos aseguramos que unir puntos aunque hayan pequeños huecos
+## pero sin saltar hacia otro cluster
+eps = 3 * float(np.median(d_nn))
+print(f"mediana dist. vecino = {np.median(d_nn):.4f} m -> eps = {eps:.4f} m, minPts = {10}")
+
+## con el epsilon elegido se hace el DBSCAN, se elige minPts como 10 pues ese valor deja
+## que una superficie "delgada" (pared o algo asi) forme un cluster.
+## ojo que solo se pasan puntos que no aun no tienen cluster, .labels_ le da un cluster a cada punto
+## o tmb puede decir que el punto sea ruido
+lab = DBSCAN(eps=eps, min_samples=10, n_jobs=-1).fit(puntos[resto]).labels_
+
+## Se imprime cuantos clusters quedaron: lab.max() + 1. 
+## Y cuantos de los puntos son ruido para el DBSCAN
+print("clusters:", lab.max() + 1, "| ruido:", (lab == -1).sum())
