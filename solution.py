@@ -213,3 +213,47 @@ for k in np.unique(lab[lab >= 0]):
         ## los puntos de la nube 1 pasa a un cluster nuevo
         ## los otros se queda en su cluster original
         lab[m[sub == 1]] = base
+
+## Parte 5: final
+print("coloreado y exportado")
+## A Cada cluster que fue generado por los pasos anteriores
+for k in np.unique(lab[lab >= 0]):
+    ## m = posiciones de los puntos del cluster k
+    m = resto[lab == k]
+    ## clusters diminutos se dejan como ruido
+    if len(m) < 100:
+        continue
+    indices[m] = next_id
+    clase[m] = "objeto"
+    next_id += 1
+
+## se asigna a un cluster un numero aleatorio
+rng = np.random.default_rng(0)
+paleta = rng.uniform(0.15, 1.0, size=(next_id, 3))
+
+## todo lo demas se deja griss
+col = np.full((N, 3), 0.5)
+con_objeto = indices >= 0
+col[con_objeto] = paleta[indices[con_objeto]]
+
+## el piso y techo se asigna un color que distinga de otros
+col[clase == "piso"] = (0.0, 0.0, 1.0)
+col[clase == "techo"] = (0.4, 0.7, 1.0)
+
+## se cambiamos los colores
+pcd_out = o3d.geometry.PointCloud(pcd)
+pcd_out.colors = o3d.utility.Vector3dVector(col)
+
+o3d.io.write_point_cloud("segmentacion.ply", pcd_out)
+print("objetos:", next_id, "| guardado: segmentacion.ply")
+o3d.visualization.draw_geometries([pcd_out])
+
+## revisar
+sin_asignar = (indices == -1)
+print("piso:", (clase == "piso").sum())
+print("techo:", (clase == "techo").sum())
+print("objetos:", (indices >= 2).sum(), "| nº de objetos:", next_id - 2)
+print("SIN ASIGNAR:", sin_asignar.sum(), f"({100 * sin_asignar.mean():.1f} % de la nube)")
+
+tam = np.bincount(indices[indices >= 2])
+print("10 clusters más grandes:", np.sort(tam)[::-1][:10])
