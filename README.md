@@ -1,11 +1,13 @@
 # Segmentación de una nube de puntos industrial mediante clustering en múltiples etapas
 
 **Curso:** Machine Learning
+
 **Integrantes:**
+
 - Ríos Gómez, Valeria Valentina
 - Diaz Flores, Nicolas Valentino
 - Vega Napan, Bruno Gonzalo
-- Cahuana Garcia, Luis Enrique 
+- Cahuana Garcia, Luis Enrique
 
 ---
 
@@ -22,7 +24,7 @@ un 3.3% de puntos sin clasificar.
 
 ![Resultado final](resultados/nube_segmentada.png)
 
-*Figura 1. Nube segmentada (fila superior) y colores reales del escaneo (fila inferior), en planta,
+*Nube segmentada (fila superior) y colores reales del escaneo (fila inferior), en planta,
 frente y vista lateral.*
 
  ---
